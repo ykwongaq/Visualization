@@ -15,7 +15,12 @@ def is_image(image_path:str):
         return False
     
 def main(args):
-    
+    """
+    This program is used to compare the depth map.
+
+    Suppose you have three baseline, you first need to produce three folder containting the result of each baseline.
+    Then you can use this program to visualize the depth maps of each baseline, together with the input image
+    """
     input_dirs = args.input_dirs
     captions = args.captions
     assert len(input_dirs) == len(captions), f"Number of captions do not match the number of folders. Expected {len(input_dirs)} captions, got {len(captions)}"
@@ -25,7 +30,7 @@ def main(args):
     num_cols = args.num_cols
     assert num_rows*num_cols >= len(input_dirs), f"Number of rows and columns should be greater than the number of folders. Expected {len(input_dirs)} <= {num_rows*num_cols}"
 
-    # Extract images files)
+    # Extract images files
     images_files_list = []
     for folder in args.input_dirs:
         assert os.path.exists(folder), f"Folder {folder} does not exist"
