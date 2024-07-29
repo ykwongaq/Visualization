@@ -49,6 +49,54 @@ def extract_intrinsics(intrinsic):
     return fx, fy, cx, cy
 
 
+def construct_point_cloud(image: np.ndarray, depth: np.ndarray):
+    if depth.ndim == 3:
+        depth = depth[:, :, 0]
+
+    height, width = depth.shape
+    xx, yy = np.meshgrid(np.arange(width), np.arange(height))
+
+    x = xx.flatten()
+    y = yy.flatten()
+    z = depth.flatten()
+    colors = image.reshape(-1, 3) / 255.0
+
+    # Create point cloud
+    points = np.vstack((x, y, z)).T
+    point_cloud = o3d.geometry.PointCloud()
+    point_cloud.points = o3d.utility.Vector3dVector(points)
+    point_cloud.colors = o3d.utility.Vector3dVector(colors)
+
+    return point_cloud
+
+
+def vis_pointcloud(point_cloud):
+    vis = o3d.visualization.Visualizer()
+    vis.create_window()
+    vis.add_geometry(point_cloud)
+    vis.run()
+    vis.destroy_window()
+
+
+def vis_mesh(point_cloud):
+    # Estimate normals if they are not present
+    point_cloud.estimate_normals(
+        search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=0.1, max_nn=30)
+    )
+
+    # Perform Poisson surface reconstruction
+    mesh, densities = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(
+        point_cloud, depth=9
+    )
+
+    # Optionally, you can crop the mesh to remove unwanted parts
+    bbox = point_cloud.get_axis_aligned_bounding_box()
+    mesh = mesh.crop(bbox)
+
+    # Visualize the mesh
+    o3d.visualization.draw_geometries([mesh])
+
+
 def main(args):
 
     image_path = args.image_path
@@ -79,53 +127,56 @@ def main(args):
     if depth.ndim == 3:
         depth = depth[:, :, 0]
 
-    height, width = depth.shape
-    xx, yy = np.meshgrid(np.arange(width), np.arange(height))
+    point_cloud = construct_point_cloud(image, depth)
+    vis_mesh(point_cloud)
 
-    x = xx.flatten()
-    y = yy.flatten()
-    z = depth.flatten()
-    colors = image.reshape(-1, 3) / 255.0
+    # height, width = depth.shape
+    # xx, yy = np.meshgrid(np.arange(width), np.arange(height))
 
-    # Remove points with zero depth
-    valid_points = z > 0
-    x = x[valid_points]
-    y = y[valid_points]
-    z = z[valid_points]
-    colors = colors[valid_points]
+    # x = xx.flatten()
+    # y = yy.flatten()
+    # z = depth.flatten()
+    # colors = image.reshape(-1, 3) / 255.0
 
-    # Create point cloud
-    points = np.vstack((x, y, z)).T
-    point_cloud = o3d.geometry.PointCloud()
-    point_cloud.points = o3d.utility.Vector3dVector(points)
-    point_cloud.colors = o3d.utility.Vector3dVector(colors)
+    # # Remove points with zero depth
+    # valid_points = z > 0
+    # x = x[valid_points]
+    # y = y[valid_points]
+    # z = z[valid_points]
+    # colors = colors[valid_points]
 
-    viewpoint_file = os.path.join(viewpoint_folder, VIEWPOINT_FILENAME)
+    # # Create point cloud
+    # points = np.vstack((x, y, z)).T
+    # point_cloud = o3d.geometry.PointCloud()
+    # point_cloud.points = o3d.utility.Vector3dVector(points)
+    # point_cloud.colors = o3d.utility.Vector3dVector(colors)
 
-    # Get current time as the filename
-    time_str = time.strftime("%Y%m%d-%H%M%S")
-    screen_cap_file = os.path.join(output_dir, f"screen_cap_{time_str}.png")
+    # viewpoint_file = os.path.join(viewpoint_folder, VIEWPOINT_FILENAME)
 
-    vis = o3d.visualization.VisualizerWithKeyCallback()
-    vis.create_window()
-    vis.add_geometry(point_cloud)
-    vis.register_key_callback(
-        ord("S"), lambda vis: save_viewpoints(vis, viewpoint_file)
-    )
-    vis.register_key_callback(ord("C"), lambda vis: save_sreencap(vis, screen_cap_file))
+    # # Get current time as the filename
+    # time_str = time.strftime("%Y%m%d-%H%M%S")
+    # screen_cap_file = os.path.join(output_dir, f"screen_cap_{time_str}.png")
 
-    if args.use_prev_viewpoint:
-        ctr = vis.get_view_control()
-        param = read_viewpoints(viewpoint_file)
-        ctr.convert_from_pinhole_camera_parameters(param, allow_arbitrary=True)
+    # vis = o3d.visualization.VisualizerWithKeyCallback()
+    # vis.create_window()
+    # vis.add_geometry(point_cloud)
+    # vis.register_key_callback(
+    #     ord("S"), lambda vis: save_viewpoints(vis, viewpoint_file)
+    # )
+    # vis.register_key_callback(ord("C"), lambda vis: save_sreencap(vis, screen_cap_file))
 
-    vis.run()
+    # if args.use_prev_viewpoint:
+    #     ctr = vis.get_view_control()
+    #     param = read_viewpoints(viewpoint_file)
+    #     ctr.convert_from_pinhole_camera_parameters(param, allow_arbitrary=True)
+
+    # vis.run()
 
 
 if __name__ == "__main__":
     DEFAULT_OUTPUT_FOLDER = "./output"
     DEFAULT_IMAGE_FILE = "images/20180915_UTP_QUADRAT_SOCBOR1_40M_1_cropped_image.png"
-    DEFAULT_DEPTH_FILE = "depths/20180915_UTP_QUADRAT_SOCBOR1_40M_1_depth.npy"
+    DEFAULT_DEPTH_FILE = "depths/20180915_UTP_QUADRAT_SOCBOR1_40M_1_depth_cropped.npy"
     DEFAULT_MIN_DEPTH = 1
     DEFAULT_MAX_DEPTH = 1000
     DEFAULT_VIEWPOINTS_FOLDER = "./viewpoints"
