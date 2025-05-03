@@ -1,77 +1,42 @@
 import numpy as np
 import cv2
 
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Set
 
 COLOR_MAPS = {}
 
 COLOR_MAPS = {
-    0: [128, 0, 128],  # Purple
-    1: [255, 165, 0],  # Orange
-    2: [255, 192, 203],  # Pink
-    3: [165, 42, 42],  # Brown
-    4: [50, 205, 50],  # Lime Green
-    5: [0, 128, 128],  # Teal
-    6: [128, 128, 0],  # Olive
-    7: [128, 0, 0],  # Maroon
-    8: [0, 0, 128],  # Navy
-    9: [255, 215, 0],  # Gold
-    10: [192, 192, 192],  # Silver
-    11: [64, 224, 208],  # Turquoise
-    12: [75, 0, 130],  # Indigo
-    13: [230, 230, 250],  # Lavender
-    14: [245, 245, 220],  # Beige
-    15: [255, 127, 80],  # Coral
-    16: [127, 255, 212],  # Aquamarine
-    17: [220, 20, 60],  # Crimson
-    18: [240, 230, 140],  # Khaki
-    19: [250, 128, 114],  # Salmon
-    20: [221, 160, 221],  # Plum
-    21: [127, 255, 0],  # Chartreuse
-    22: [204, 204, 255],  # Periwinkle
-    23: [152, 255, 152],  # Mint Green
-    24: [210, 105, 30],  # Chocolate
-    25: [139, 69, 19],  # Saddle Brown
-    26: [233, 150, 122],  # Dark Salmon
-    27: [72, 61, 139],  # Dark Slate Blue
-    28: [143, 188, 143],  # Dark Sea Green
-    29: [255, 140, 0],  # Dark Orange
+    0: [135, 206, 250],  # Light Sky Blue
+    1: [255, 182, 193],  # Light Pink
+    2: [152, 251, 152],  # Pale Green
+    3: [255, 160, 122],  # Light Salmon
+    4: [238, 130, 238],  # Violet
+    5: [240, 230, 140],  # Khaki
+    6: [250, 128, 114],  # Salmon
+    7: [221, 160, 221],  # Plum
+    8: [175, 238, 238],  # Pale Turquoise
+    9: [255, 228, 181],  # Moccasin
+    10: [144, 238, 144],  # Light Green
+    11: [216, 191, 216],  # Thistle
+    12: [255, 218, 185],  # Peach Puff
+    13: [32, 178, 170],   # Light Sea Green
+    14: [100, 149, 237],  # Cornflower Blue
+    15: [244, 164, 96],   # Sandy Brown
+    16: [72, 209, 204],   # Medium Turquoise
+    17: [219, 112, 147],  # Pale Violet Red
+    18: [255, 222, 173],  # Navajo White
+    19: [255, 105, 180],  # Hot Pink
+    20: [255, 127, 80],   # Coral
+    21: [173, 216, 230],  # Light Blue
+    22: [127, 255, 212],  # Aquamarine
+    23: [240, 128, 128],  # Light Coral
+    24: [250, 250, 210],  # Light Goldenrod Yellow
+    25: [205, 92, 92],    # Indian Red
+    26: [176, 224, 230],  # Powder Blue
+    27: [210, 180, 140],  # Tan
+    28: [255, 239, 213],  # Papaya Whip
+    29: [222, 184, 135],  # Burlywood
 }
-
-COLOR_MAPS_WIHT_BG = {
-    0: [0, 0, 0],  # Black (Background)
-    1: [128, 0, 128],  # Purple
-    2: [255, 165, 0],  # Orange
-    3: [255, 192, 203],  # Pink
-    4: [165, 42, 42],  # Brown
-    5: [50, 205, 50],  # Lime Green
-    6: [0, 128, 128],  # Teal
-    7: [128, 128, 0],  # Olive
-    8: [128, 0, 0],  # Maroon
-    9: [0, 0, 128],  # Navy
-    10: [255, 215, 0],  # Gold
-    11: [192, 192, 192],  # Silver
-    12: [64, 224, 208],  # Turquoise
-    13: [75, 0, 130],  # Indigo
-    14: [230, 230, 250],  # Lavender
-    15: [245, 245, 220],  # Beige
-    16: [255, 127, 80],  # Coral
-    17: [127, 255, 212],  # Aquamarine
-    18: [220, 20, 60],  # Crimson
-    19: [240, 230, 140],  # Khaki
-    20: [250, 128, 114],  # Salmon
-    21: [221, 160, 221],  # Plum
-    22: [127, 255, 0],  # Chartreuse
-    13: [204, 204, 255],  # Periwinkle
-    24: [152, 255, 152],  # Mint Green
-    25: [210, 105, 30],  # Chocolate
-    26: [139, 69, 19],  # Saddle Brown
-    27: [233, 150, 122],  # Dark Salmon
-    28: [72, 61, 139],  # Dark Slate Blue
-    29: [143, 188, 143],  # Dark Sea Green
-    30: [255, 140, 0],  # Dark Orange
-}
-
 
 class Visualizer:
     """
@@ -79,10 +44,10 @@ class Visualizer:
     """
 
     # Default boundary width is the ratio of the image shortest side
-    DEFAULT_BOUNDARY_RATIO = 0.005
+    DEFAULT_BOUNDARY_RATIO = 0.007
 
-    DEFAULT_MASK_ALPHA = 0.3
-    DEFAULT_BUNDARY_ALPHA = 0.5
+    DEFAULT_MASK_ALPHA = 0.4
+    DEFAULT_BUNDARY_ALPHA = 0.7
 
 
     def __init__(self, mask_alpha: float = DEFAULT_MASK_ALPHA, color_map: Dict = COLOR_MAPS, boundary_alpha: float = DEFAULT_BUNDARY_ALPHA, boundary_ratio: float = DEFAULT_BOUNDARY_RATIO):
@@ -136,7 +101,7 @@ class Visualizer:
         """
         self.boundary_width_ratio = boundary_width_ratio
 
-    def visualize_mask(self, image: np.ndarray, mask: np.ndarray, category_id: int = 0, color: Tuple[int, int, int] = None, add_boundary: bool = True) -> np.ndarray:
+    def visualize_binary_mask(self, image: np.ndarray, mask: np.ndarray, category_id: int = 0, color: Tuple[int, int, int] = None, add_boundary: bool = True) -> np.ndarray:
         """
         Visualize the segmentation mask on the image.
 
@@ -192,7 +157,7 @@ class Visualizer:
 
         if color is None:
             color = self.color_map[category_id % len(self.color_map)]
-        
+
         if boundary_width is None:
             # Calculate the boundary width based on the shortest side of the image
             boundary_width = int(min(image_h, image_w) * self.boundary_width_ratio)
@@ -209,3 +174,27 @@ class Visualizer:
         
         return output_image
     
+    def visualize_sementic_mask(self, image: np.ndarray, mask: np.ndarray, ignore_idx: Set = set([0])) -> np.ndarray:
+        """
+        Visualize the segmentation mask on the image.
+        Args:
+            image (np.ndarray): The input image.
+            mask (np.ndarray): Semantic mask with class indices.
+            ignore_idx (Set): The class indices to ignore.
+
+        Returns:
+            np.ndarray: The image with the mask overlayed.
+        """
+
+        assert image.ndim == 3, f"Image must be a 3D array (H, W, C), but got {image.ndim}D"
+        assert mask.ndim == 2, f"Mask must be a 2D array (H, W), but got {mask.ndim}D"
+        assert image.shape[:2] == mask.shape, f"Image and mask must have the same spatial dimensions, but got {image.shape[:2]} for image and {mask.shape} for mask"
+        
+        output_image = image.copy()
+        unique_classes = np.unique(mask)
+        for class_id in unique_classes:
+            if class_id in ignore_idx:
+                continue
+            category_mask = (mask == class_id).astype(np.uint8)
+            output_image = self.visualize_binary_mask(output_image, category_mask, category_id=class_id)
+        return output_image
