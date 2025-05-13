@@ -3,8 +3,6 @@ import cv2
 
 from typing import Dict, Tuple, Set
 
-COLOR_MAPS = {}
-
 COLOR_MAPS = {
     0: [135, 206, 250],  # Light Sky Blue
     1: [255, 182, 193],  # Light Pink
