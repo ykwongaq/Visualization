@@ -82,6 +82,13 @@ class Visualizer:
         if isinstance(colors, tuple):
             colors = [colors] * len(bboxes)
 
+        assert len(bboxes) == len(
+            colors
+        ), "Number of bounding boxes must match number of colors."
+        assert len(bboxes) == len(
+            labels
+        ), "Number of bounding boxes must match number of labels."
+
         for i, bbox in enumerate(bboxes):
             x1, y1, x2, y2 = bbox
             color = colors[i]
