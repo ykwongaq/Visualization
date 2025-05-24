@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
 
-from typing import Dict, Tuple, Set
+from typing import Dict, Tuple, Set, List, Union
 
 COLOR_MAPS = {
     0: [135, 206, 250],  # Light Sky Blue
@@ -17,24 +17,25 @@ COLOR_MAPS = {
     10: [144, 238, 144],  # Light Green
     11: [216, 191, 216],  # Thistle
     12: [255, 218, 185],  # Peach Puff
-    13: [32, 178, 170],   # Light Sea Green
+    13: [32, 178, 170],  # Light Sea Green
     14: [100, 149, 237],  # Cornflower Blue
-    15: [244, 164, 96],   # Sandy Brown
-    16: [72, 209, 204],   # Medium Turquoise
+    15: [244, 164, 96],  # Sandy Brown
+    16: [72, 209, 204],  # Medium Turquoise
     17: [219, 112, 147],  # Pale Violet Red
     18: [255, 222, 173],  # Navajo White
     19: [255, 105, 180],  # Hot Pink
-    20: [255, 127, 80],   # Coral
+    20: [255, 127, 80],  # Coral
     21: [173, 216, 230],  # Light Blue
     22: [127, 255, 212],  # Aquamarine
     23: [240, 128, 128],  # Light Coral
     24: [250, 250, 210],  # Light Goldenrod Yellow
-    25: [205, 92, 92],    # Indian Red
+    25: [205, 92, 92],  # Indian Red
     26: [176, 224, 230],  # Powder Blue
     27: [210, 180, 140],  # Tan
     28: [255, 239, 213],  # Papaya Whip
     29: [222, 184, 135],  # Burlywood
 }
+
 
 class Visualizer:
     """
@@ -47,14 +48,19 @@ class Visualizer:
     DEFAULT_MASK_ALPHA = 0.4
     DEFAULT_BUNDARY_ALPHA = 0.7
 
-
-    def __init__(self, mask_alpha: float = DEFAULT_MASK_ALPHA, color_map: Dict = COLOR_MAPS, boundary_alpha: float = DEFAULT_BUNDARY_ALPHA, boundary_ratio: float = DEFAULT_BOUNDARY_RATIO):
+    def __init__(
+        self,
+        mask_alpha: float = DEFAULT_MASK_ALPHA,
+        color_map: Dict = COLOR_MAPS,
+        boundary_alpha: float = DEFAULT_BUNDARY_ALPHA,
+        boundary_ratio: float = DEFAULT_BOUNDARY_RATIO,
+    ):
         self.mask_alpha = mask_alpha
         self.color_map = color_map
         self.boundary_alpha = boundary_alpha
         self.boundary_width_ratio = boundary_ratio
 
-    def set_color_map(self, color_map: Dict ):
+    def set_color_map(self, color_map: Dict):
         """
         Set the color map for visualization.
 
@@ -99,42 +105,86 @@ class Visualizer:
         """
         self.boundary_width_ratio = boundary_width_ratio
 
-    def visualize_binary_mask(self, image: np.ndarray, mask: np.ndarray, category_id: int = 0, color: Tuple[int, int, int] = None, add_boundary: bool = True) -> np.ndarray:
+    def visualize_masks(
+        self,
+        image: np.ndarray,
+        masks: Union[np.ndarray, List[np.ndarray]],
+        category_ids: Union[int, List[int]] = 0,
+        colors: Union[
+            Tuple[int, int, int],
+            List[Tuple[int, int, int]],
+            List[int],
+        ] = None,
+        add_boundary: bool = True,
+    ):
         """
-        Visualize the segmentation mask on the image.
+        Visualize the segmentation masks on the image.
 
         Args:
             image (np.ndarray): The input image.
-            mask (np.ndarray): Binary mask.
-            category_id (int): The category ID for the mask.
-            color (Tuple[int, int, int]): The color for the mask overlay. If not set, then we use the default color map.
+            masks (Union[np.ndarray, List[np.ndarray]]): Binary masks or list of binary masks.
+            category_ids (Union[int, List[int]]): The category IDs for the masks.
+            colors (Union[Tuple[int, int, int], List[Tuple[int, int, int]], List[List[Tuple[int, int, int]]]]): The colors for the mask overlay. If not set, then we use the default color map.
             add_boundary (bool): Whether to add a boundary around the mask.
         Returns:
-            np.ndarray: The image with the mask overlayed.
+            np.ndarray: The image with the masks overlayed.
         """
-        assert image.ndim == 3, f"Image must be a 3D array (H, W, C), but got {image.ndim}D"
-        assert mask.ndim == 2, f"Mask must be a 2D array (H, W), but got {mask.ndim}D"
-        assert image.shape[:2] == mask.shape, f"Image and mask must have the same spatial dimensions, but got {image.shape[:2]} for image and {mask.shape} for mask"
+        assert (
+            image.ndim == 3
+        ), f"Image must be a 3D array (H, W, C), but got {image.ndim}D"
 
-        # Ensure the mask is binary
-        mask = (mask > 0).astype(np.uint8)
+        if isinstance(masks, np.ndarray):
+            masks = [masks]
 
-        # Create a color version of the mask
-        if color is None:
-            color = self.color_map[category_id % len(self.color_map)]
+        if isinstance(category_ids, int):
+            category_ids = [category_ids] * len(masks)
 
-        color_mask = np.zeros_like(image)
-        color_mask[mask == 1] = color
+        if colors is None:
+            colors = [
+                COLOR_MAPS[category_id % len(COLOR_MAPS)]
+                for category_id in category_ids
+            ]
+        elif isinstance(colors, tuple):
+            colors = [colors] * len(masks)
 
-        color_mask = cv2.addWeighted(image, 1 - self.mask_alpha, color_mask, self.mask_alpha, 0)
-        output_image = np.where(mask[:, :, None] == 1, color_mask, image)
+        assert (
+            len(masks) == len(category_ids) == len(colors)
+        ), f"The number of masks, category IDs, and colors must be the same, but got {len(masks)}, {len(category_ids)}, and {len(colors)}"
 
-        if add_boundary:
-            output_image = self.visualize_boundary(output_image, mask, category_id=category_id, color=color)
+        output_image = image.copy()
+
+        for mask, category_id, color in zip(masks, category_ids, colors):
+            assert (
+                mask.ndim == 2
+            ), f"Mask must be a 2D array (H, W), but got {mask.ndim}D"
+            assert (
+                image.shape[:2] == mask.shape
+            ), f"Image and mask must have the same spatial dimensions, but got {image.shape[:2]} for image and {mask.shape} for mask"
+
+            mask = (mask > 0).astype(np.uint8)  # Ensure the mask is binary
+            color_mask = np.zeros_like(image)
+            color_mask[mask == 1] = color
+
+            color_mask = cv2.addWeighted(
+                output_image, 1 - self.mask_alpha, color_mask, self.mask_alpha, 0
+            )
+            output_image = np.where(mask[:, :, None] == 1, color_mask, output_image)
+
+            if add_boundary:
+                output_image = self.visualize_boundary(
+                    output_image, mask, category_id=category_id, color=color
+                )
 
         return output_image
-    
-    def visualize_boundary(self, image: np.ndarray, mask: np.ndarray, category_id: int = 0, color:Tuple[int, int, int] = None, boundary_width: int = None) -> np.ndarray:
+
+    def visualize_boundary(
+        self,
+        image: np.ndarray,
+        mask: np.ndarray,
+        category_id: int = 0,
+        color: Tuple[int, int, int] = None,
+        boundary_width: int = None,
+    ) -> np.ndarray:
         """
         Add a boundary around the mask.
 
@@ -145,9 +195,13 @@ class Visualizer:
         Returns:
             np.ndarray: The image with the boundary overlayed.
         """
-        assert image.ndim == 3, f"Image must be a 3D array (H, W, C), but got {image.ndim}D"
+        assert (
+            image.ndim == 3
+        ), f"Image must be a 3D array (H, W, C), but got {image.ndim}D"
         assert mask.ndim == 2, f"Mask must be a 2D array (H, W), but got {mask.ndim}D"
-        assert image.shape[:2] == mask.shape, f"Image and mask must have the same spatial dimensions, but got {image.shape[:2]} for image and {mask.shape} for mask"
+        assert (
+            image.shape[:2] == mask.shape
+        ), f"Image and mask must have the same spatial dimensions, but got {image.shape[:2]} for image and {mask.shape} for mask"
 
         # Ensure the mask is binary
         mask = (mask > 0).astype(np.uint8)
@@ -160,19 +214,25 @@ class Visualizer:
             # Calculate the boundary width based on the shortest side of the image
             boundary_width = int(min(image_h, image_w) * self.boundary_width_ratio)
 
-        kernel = cv2.getStructuringElement(cv2.MORPH_CROSS, (boundary_width, boundary_width))
+        kernel = cv2.getStructuringElement(
+            cv2.MORPH_CROSS, (boundary_width, boundary_width)
+        )
         eroded_mask = cv2.erode(mask, kernel, iterations=1)
         boundary = mask - eroded_mask
 
         boundary_mask = np.zeros_like(image, dtype=np.uint8)
         boundary_mask[boundary == 1] = color
 
-        boundary_mask = cv2.addWeighted(image, 1 - self.boundary_alpha, boundary_mask, self.boundary_alpha, 0)
+        boundary_mask = cv2.addWeighted(
+            image, 1 - self.boundary_alpha, boundary_mask, self.boundary_alpha, 0
+        )
         output_image = np.where(boundary[:, :, None] == 1, boundary_mask, image)
-        
+
         return output_image
-    
-    def visualize_sementic_mask(self, image: np.ndarray, mask: np.ndarray, ignore_idx: Set = set([0])) -> np.ndarray:
+
+    def visualize_sementic_mask(
+        self, image: np.ndarray, mask: np.ndarray, ignore_idx: Set = set([0])
+    ) -> np.ndarray:
         """
         Visualize the segmentation mask on the image.
         Args:
@@ -184,15 +244,21 @@ class Visualizer:
             np.ndarray: The image with the mask overlayed.
         """
 
-        assert image.ndim == 3, f"Image must be a 3D array (H, W, C), but got {image.ndim}D"
+        assert (
+            image.ndim == 3
+        ), f"Image must be a 3D array (H, W, C), but got {image.ndim}D"
         assert mask.ndim == 2, f"Mask must be a 2D array (H, W), but got {mask.ndim}D"
-        assert image.shape[:2] == mask.shape, f"Image and mask must have the same spatial dimensions, but got {image.shape[:2]} for image and {mask.shape} for mask"
-        
+        assert (
+            image.shape[:2] == mask.shape
+        ), f"Image and mask must have the same spatial dimensions, but got {image.shape[:2]} for image and {mask.shape} for mask"
+
         output_image = image.copy()
         unique_classes = np.unique(mask)
         for class_id in unique_classes:
             if class_id in ignore_idx:
                 continue
             category_mask = (mask == class_id).astype(np.uint8)
-            output_image = self.visualize_binary_mask(output_image, category_mask, category_id=class_id)
+            output_image = self.visualize_binary_mask(
+                output_image, category_mask, category_id=class_id
+            )
         return output_image
