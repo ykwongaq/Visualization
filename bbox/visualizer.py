@@ -79,19 +79,20 @@ class Visualizer:
         draw = ImageDraw.Draw(image)
 
         # Check if colors is a single color or a list of colors
-        if isinstance(colors, tuple):
+        # single color: tuple of integer or list of integers
+        if isinstance(colors, tuple) or isinstance(colors, list) and len(colors) == 3:
             colors = [colors] * len(bboxes)
 
         assert len(bboxes) == len(
             colors
         ), "Number of bounding boxes must match number of colors."
-        assert len(bboxes) == len(
-            labels
-        ), "Number of bounding boxes must match number of labels."
-
+        if labels is not None:
+            assert len(bboxes) == len(
+                labels
+            ), "Number of bounding boxes must match number of labels."
         for i, bbox in enumerate(bboxes):
             x1, y1, x2, y2 = bbox
-            color = colors[i]
+            color = tuple(colors[i])
             draw.rectangle([x1, y1, x2, y2], outline=color, width=width)
 
             if labels is not None and i < len(labels):
