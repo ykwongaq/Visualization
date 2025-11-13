@@ -3,11 +3,15 @@ import argparse
 import subprocess
 
 
-def main(args):
-    input_pattern = args.input_pattern
-    output_video = args.output_video
-    fps = args.fps
+def frame_to_video(frame_pattern: str, output_video: str, fps: int) -> None:
+    """
+    Convert frames to video using ffmpeg
 
+    Args:
+        frame_pattern (str): Path pattern to input frames (e.g., /path/to/frames/%04d.jpg)
+        output_video (str): Path to the output video file
+        fps (int): Frames per second for the output video
+    """
     cmd = [
         "ffmpeg",
         "-framerate",
@@ -15,7 +19,7 @@ def main(args):
         "-start_number",
         "0",
         "-i",
-        input_pattern,  # input pattern of image frames
+        frame_pattern,  # input pattern of image frames
         "-c:v",
         "libx264",  # use H.264 codec
         "-pix_fmt",
@@ -24,8 +28,6 @@ def main(args):
     ]
 
     subprocess.run(cmd)
-
-    print(f"Video saved to {output_video}")
 
 
 if __name__ == "__main__":
@@ -41,4 +43,4 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    main(args)
+    frame_to_video(args.input_pattern, args.output_video, args.fps)
