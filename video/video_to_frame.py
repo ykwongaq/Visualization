@@ -3,14 +3,15 @@ import argparse
 import subprocess
 
 
-# Convert video to frames using ffmpeg
-def main(args):
-    input_video = args.input_video
-    output_pattern = args.output_pattern
-    fps = args.fps
+def video_to_frame(input_video: str, output_pattern: str, fps: int) -> None:
+    """
+    Convert video to frames using ffmpeg
 
-    os.makedirs(os.path.dirname(output_pattern), exist_ok=True)
-
+    Args:
+        input_video (str): Path to the input video file
+        output_pattern (str): Path pattern for the output frames (e.g., /path/to/frames/%04d.jpg)
+        fps (int): Frames per second to extract from the video
+    """
     cmd = [
         "ffmpeg",
         "-i",
@@ -24,7 +25,15 @@ def main(args):
 
     subprocess.run(cmd)
 
-    print(f"Frames saved to {output_pattern}")
+# Convert video to frames using ffmpeg
+def main(args):
+    input_video = args.input_video
+    output_pattern = args.output_pattern
+    fps = args.fps
+
+    os.makedirs(os.path.dirname(output_pattern), exist_ok=True)
+
+    video_to_frame(input_video, output_pattern, fps)
 
 
 if __name__ == "__main__":
