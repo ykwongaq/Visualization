@@ -2,8 +2,29 @@ import os
 import argparse
 import subprocess
 
+def get_fps(video_path: str) -> float:
+    command = [
+        "ffprobe",
+        "-v", "0",
+        "-select_streams", "v:0",
+        "-show_entries", "stream=r_frame_rate",
+        "-of", "default=noprint_wrappers=1:nokey=1",
+        video_path
+    ]
+    
+    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    fps_str = result.stdout.strip()
+    
+    # Handle fractional FPS like 30000/1001
+    if "/" in fps_str:
+        num, denom = map(float, fps_str.split("/"))
+        fps = num / denom
+    else:
+        fps = float(fps_str)
+    
+    return fps
 
-def video_to_frame(input_video: str, output_pattern: str, fps: int) -> None:
+def video_to_frame(input_video: str, output_pattern: str, fps: int = None) -> None:
     """
     Convert video to frames using ffmpeg
 
@@ -12,6 +33,10 @@ def video_to_frame(input_video: str, output_pattern: str, fps: int) -> None:
         output_pattern (str): Path pattern for the output frames (e.g., /path/to/frames/%04d.jpg)
         fps (int): Frames per second to extract from the video
     """
+
+    if fps is None:
+        fps = get_fps(input_video)
+    
     cmd = [
         "ffmpeg",
         "-i",
