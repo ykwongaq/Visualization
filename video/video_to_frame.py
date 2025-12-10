@@ -24,7 +24,7 @@ def get_fps(video_path: str) -> float:
     
     return fps
 
-def video_to_frame(input_video: str, output_pattern: str, fps: int = None) -> None:
+def video_to_frame(input_video: str, output_dir: str, output_pattern = "%08d.jpg", fps: int = None) -> None:
     """
     Convert video to frames using ffmpeg
 
@@ -36,6 +36,8 @@ def video_to_frame(input_video: str, output_pattern: str, fps: int = None) -> No
 
     if fps is None:
         fps = get_fps(input_video)
+
+    frame_pattern = os.path.join(output_dir, output_pattern)
     
     cmd = [
         "ffmpeg",
@@ -45,7 +47,7 @@ def video_to_frame(input_video: str, output_pattern: str, fps: int = None) -> No
         f"fps={fps}",  # set frame rate
         "-start_number",
         "0",
-        output_pattern,  # output pattern for image frames
+        frame_pattern,  # output pattern for image frames
     ]
 
     subprocess.run(cmd)
