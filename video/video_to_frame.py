@@ -6,24 +6,37 @@ import subprocess
 def get_fps(video_path: str) -> float:
     command = [
         "ffprobe",
-        "-v", "0",
+        "-v", "error",
         "-select_streams", "v:0",
         "-show_entries", "stream=r_frame_rate",
         "-of", "default=noprint_wrappers=1:nokey=1",
         video_path
     ]
-    
     result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     fps_str = result.stdout.strip()
-    
-    # Handle fractional FPS like 30000/1001
+
     if "/" in fps_str:
         num, denom = map(float, fps_str.split("/"))
         fps = num / denom
     else:
         fps = float(fps_str)
-    
+
     return fps
+
+
+def get_resolution(video_path: str) -> tuple[int, int]:
+    """Return (width, height) of the input video."""
+    command = [
+        "ffprobe",
+        "-v", "error",
+        "-select_streams", "v:0",
+        "-show_entries", "stream=width,height",
+        "-of", "csv=s=x:p=0",
+        video_path
+    ]
+    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    w, h = map(int, result.stdout.strip().split("x"))
+    return w, h
 
 
 def video_to_frame(
@@ -35,13 +48,7 @@ def video_to_frame(
 ) -> None:
     """
     Convert video to frames using ffmpeg.
-
-    Args:
-        input_video (str): Path to the input video file
-        output_dir (str): Directory for output frames
-        output_pattern (str): Filename pattern for the output frames (e.g., %04d.jpg)
-        fps (int): Frames per second to extract from the video
-        max_size (int): Maximum pixel size for the longer side of output frames
+    Only scales down if the input video is larger than max_size.
     """
 
     if fps is None:
@@ -50,16 +57,27 @@ def video_to_frame(
     os.makedirs(output_dir, exist_ok=True)
     frame_pattern = os.path.join(output_dir, output_pattern)
 
-    # scaling + fps filter, maintaining aspect ratio
-    scale_filter = f"scale='if(gt(iw,ih),{max_size},-1)':'if(gt(ih,iw),{max_size},-1)'"
-    vf_filter = f"fps={fps},{scale_filter}"
+    # Check resolution before deciding to scale
+    width, height = get_resolution(input_video)
+    longer_side = max(width, height)
+
+    if longer_side > max_size:
+        # Add scaling to the filter
+        scale_filter = f"scale={max_size}:{max_size}:force_original_aspect_ratio=decrease"
+        vf_filter = f"fps={fps},{scale_filter}"
+        print(f"Scaling down: {width}x{height} → max {max_size}")
+    else:
+        # No scaling needed
+        vf_filter = f"fps={fps}"
+        print(f"Keeping original size: {width}x{height}")
 
     cmd = [
         "ffmpeg",
-        "-i", input_video,      # input video
-        "-vf", vf_filter,       # video filter chain
+        "-hide_banner", "-loglevel", "error",
+        "-i", input_video,
+        "-vf", vf_filter,
         "-start_number", "0",
-        frame_pattern           # output filename pattern
+        frame_pattern
     ]
 
     subprocess.run(cmd, check=True)
@@ -79,24 +97,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_video", type=str, required=True, help="Path to the input video file")
     parser.add_argument("--output_dir", type=str, required=True, help="Path to the output directory")
-    parser.add_argument(
-        "--output_pattern",
-        type=str,
-        default="%08d.jpg",
-        help="Filename pattern for the output frames (default: %08d.jpg)",
-    )
-    parser.add_argument(
-        "--fps",
-        type=int,
-        default=30,
-        help="Frames per second to extract from the video",
-    )
-    parser.add_argument(
-        "--max_size",
-        type=int,
-        default=1024,
-        help="Maximum pixel size for the longer dimension of the frames",
-    )
+    parser.add_argument("--output_pattern", type=str, default="%08d.jpg", help="Output filename pattern")
+    parser.add_argument("--fps", type=int, default=None, help="Frames per second to extract (default: video FPS)")
+    parser.add_argument("--max_size", type=int, default=1024, help="Maximum pixel size for longest side")
 
     args = parser.parse_args()
     main(args)
