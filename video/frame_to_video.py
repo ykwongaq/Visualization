@@ -20,8 +20,8 @@ def frame_to_video(frame_pattern: str, output_video: str, fps: int) -> None:
         "0",
         "-i",
         frame_pattern,  # input pattern of image frames
-        # "-c:v",
-        # "libx264",  # use H.264 codec
+        "-c:v",
+        "libx264",  # use H.264 codec
         "-pix_fmt",
         "yuv420p",  # ensure compatibility with most players
         output_video,
