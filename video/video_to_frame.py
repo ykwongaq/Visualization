@@ -35,7 +35,7 @@ def get_resolution(video_path: str) -> tuple[int, int]:
         video_path
     ]
     result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    w, h = map(int, result.stdout.strip().split("x"))
+    w, h = map(int, result.stdout.strip().split("x")[:2])
     return w, h
 
 
