@@ -1,5 +1,5 @@
-import os
 import argparse
+import os
 import subprocess
 
 
@@ -15,6 +15,7 @@ def frame_to_video(frame_pattern: str, output_video: str, fps: int) -> None:
     cmd = [
         "ffmpeg",
         "-framerate",
+        "-y",
         str(fps),  # input frame rate
         "-start_number",
         "0",
