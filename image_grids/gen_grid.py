@@ -24,6 +24,7 @@ def gen_image_grid(
     labels: List[str],
     label_fontsize: int,
     label_height: int,
+    label_fontthickness: int,
     padding: int,
     layout: List[List[Dict[str, Any]]],
 ) -> np.ndarray:
@@ -67,7 +68,7 @@ def gen_image_grid(
 
     font = cv2.FONT_HERSHEY_SIMPLEX
     font_scale = label_fontsize / 30
-    font_thickness = 2  # bold
+    font_thickness = label_fontthickness  # bold
 
     # --- Draw images row-by-row ---
     y_offset = padding
@@ -148,6 +149,7 @@ def gen_image_grid_helper(
     output_path: str,
     label_fontsize: int,
     label_height: int,
+    label_fontthickness: int,
     padding: int,
     layout: List[List[Dict[str, Any]]],
 ):
@@ -162,6 +164,7 @@ def gen_image_grid_helper(
         labels,
         label_fontsize,
         label_height,
+        label_fontthickness,
         padding,
         layout,
     )
@@ -181,6 +184,7 @@ def main(args):
     label_fontsize: int = config["label_fontsize"]
     label_height: int = config["label_height"]
     padding: int = config["padding"]
+    label_fontthickness: int = config.get("label_fontthickness", 2)
 
     os.makedirs(output_dir, exist_ok=True)
 
@@ -220,6 +224,7 @@ def main(args):
                     output_path,
                     label_fontsize,
                     label_height,
+                    label_fontthickness,
                     padding,
                     layout,
                 ),

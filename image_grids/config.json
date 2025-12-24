@@ -1,12 +1,10 @@
 {
   "image_dirs": [
-    "/home/davidwong/Data/kaust/coral_tank/masks_visualization/GoPro/GX010186_fps-30",
-    "/home/davidwong/Data/kaust/coral_tank/masks_visualization/GoPro/GX010186_fps-30",
-    "/home/davidwong/Data/kaust/coral_tank/masks_visualization/GoPro/GX010186_fps-30"
   ],
   "labels": ["Method A", "Method B", "Method C"],
-  "output_dir": "/home/davidwong/Visualization/kaust/test",
+  "output_dir": "",
   "label_fontsize": 80,
+  "label_fontthickness": 5,
   "label_height": 80,
   "padding": 10,
   "layout": [
