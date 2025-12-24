@@ -200,6 +200,14 @@ def main(args):
         )
         image_files_list.append(image_files)
 
+    min_num_images = min(len(files) for files in image_files_list)
+    for idx, files in enumerate(image_files_list):
+        if len(files) > min_num_images:
+            print(
+                f"Warning: Directory {image_dirs[idx]} has more images ({len(files)}) than the minimum ({min_num_images}). Truncating."
+            )
+            image_files_list[idx] = files[:min_num_images]
+
     num_images = len(image_files_list[0])
     for idx, files in enumerate(image_files_list):
         assert (
@@ -215,6 +223,7 @@ def main(args):
 
         for i in range(num_images):
             images_files = [files[i] for files in image_files_list]
+
             output_path = os.path.join(output_dir, f"{i:08d}.jpg")
             pool.apply_async(
                 gen_image_grid_helper,

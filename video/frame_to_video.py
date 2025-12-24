@@ -12,17 +12,20 @@ def frame_to_video(frame_pattern: str, output_video: str, fps: int) -> None:
         output_video (str): Path to the output video file
         fps (int): Frames per second for the output video
     """
+
+    os.makedirs(os.path.dirname(output_video), exist_ok=True)
+
     cmd = [
         "ffmpeg",
-        "-framerate",
         "-y",
+        "-framerate",
         str(fps),  # input frame rate
         "-start_number",
         "0",
         "-i",
         frame_pattern,  # input pattern of image frames
-        "-c:v",
-        "libx264",  # use H.264 codec
+        # "-c:v",
+        # "libx264",  # use H.264 codec
         "-pix_fmt",
         "yuv420p",  # ensure compatibility with most players
         output_video,
