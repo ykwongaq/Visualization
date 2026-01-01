@@ -3,7 +3,9 @@ import os
 import subprocess
 
 
-def frame_to_video(frame_pattern: str, output_video: str, fps: int) -> None:
+def frame_to_video(
+    input_folder: str, output_video: str, fps: int = 30, frame_pattern="%08d.jpg"
+) -> None:
     """
     Convert frames to video using ffmpeg
 
@@ -15,6 +17,8 @@ def frame_to_video(frame_pattern: str, output_video: str, fps: int) -> None:
 
     os.makedirs(os.path.dirname(output_video), exist_ok=True)
 
+    target_frame_pattern = os.path.join(input_folder, frame_pattern)
+
     cmd = [
         "ffmpeg",
         "-y",
@@ -23,7 +27,7 @@ def frame_to_video(frame_pattern: str, output_video: str, fps: int) -> None:
         "-start_number",
         "0",
         "-i",
-        frame_pattern,  # input pattern of image frames
+        target_frame_pattern,  # input pattern of image frames
         # "-c:v",
         # "libx264",  # use H.264 codec
         "-pix_fmt",
