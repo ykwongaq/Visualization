@@ -173,18 +173,15 @@ def gen_image_grid_helper(
     cv2.imwrite(output_path, cv2.cvtColor(image_grid, cv2.COLOR_RGB2BGR))
 
 
-def main(args):
-    config_file = args.config_file
-    config = load_config(config_file)
-
+def gen_grid(config: Dict):
     image_dirs: List[str] = config["image_dirs"]
     output_dir = config["output_dir"]
     labels: List[str] = config["labels"]
     layout = config["layout"]
-    label_fontsize: int = config["label_fontsize"]
-    label_height: int = config["label_height"]
-    padding: int = config["padding"]
-    label_fontthickness: int = config.get("label_fontthickness", 2)
+    label_fontsize: int = config.get("label_fontsize", 80)
+    label_height: int = config.get("label_height", 80)
+    padding: int = config.get("padding", 10)
+    label_fontthickness: int = config.get("label_fontthickness", 5)
 
     os.makedirs(output_dir, exist_ok=True)
 
@@ -243,6 +240,12 @@ def main(args):
         pool.close()
         pool.join()
         pbar.close()
+
+
+def main(args):
+    config_file = args.config_file
+    config = load_config(config_file)
+    gen_grid(config)
 
 
 if __name__ == "__main__":
