@@ -41,14 +41,15 @@ def frame_to_video(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--input_pattern", type=str, help="Path to the folder containing video frames"
+        "--frame_folder", type=str, help="Path to the folder containing video frames"
     )
     parser.add_argument(
         "--output_video", type=str, help="Path to the output video file"
     )
+    parser.add_argument("--file_pattern", type=str, default="%08d.jpg")
     parser.add_argument(
         "--fps", type=int, default=30, help="Frames per second for the output video"
     )
 
     args = parser.parse_args()
-    frame_to_video(args.input_pattern, args.output_video, args.fps)
+    frame_to_video(args.frame_folder, args.output_video, args.fps, args.file_pattern)
