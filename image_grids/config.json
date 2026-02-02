@@ -1,19 +1,28 @@
 {
   "image_dirs": [
+    "/home/davidwong/Visualization/kaust/iros/yolo_output/1_masks",
+    "/home/davidwong/Visualization/kaust/iros/yolo_output/11_masks"
   ],
-  "labels": ["Method A", "Method B", "Method C"],
-  "output_dir": "",
+  "labels": [
+    "01-10 instances",
+    "11-20 instances"
+  ],
+  "output_dir": "/home/davidwong/Visualization/temp",
   "label_fontsize": 80,
   "label_fontthickness": 5,
   "label_height": 80,
   "padding": 10,
   "layout": [
     [
-      { "img": 0 },
-      { "img": 1 }
+      {
+        "img": 0
+      }
     ],
     [
-      { "img": 2, "colspan": 2 }
+      {
+        "img": 1
+      }
     ]
-  ]
+  ],
+  "scale": 0.2
 }

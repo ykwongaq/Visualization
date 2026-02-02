@@ -29,89 +29,94 @@ def gen_image_grid(
     layout: List[List[Dict[str, Any]]],
 ) -> np.ndarray:
     """
-    Create an image grid with a black background.
-    Labels are white, bold, centered, placed in a reserved area above each image.
+    Create an image grid that supports colspan/rowspan like HTML tables.
+    Each image fills all its assigned space including rowspan regions,
+    and label height is correctly accounted for in vertical layout.
     """
 
-    # --- Determine layout grid size ---
     num_rows = len(layout)
-    num_cols = 0
-    for row in layout:
-        col_sum = sum(cell.get("colspan", 1) for cell in row)
-        num_cols = max(num_cols, col_sum)
+    num_cols = max(sum(cell.get("colspan", 1) for cell in row) for row in layout)
 
-    # --- Determine base cell size from the first image ---
     base_img = images[0]
     base_h, base_w = base_img.shape[:2]
-    cell_width = base_w
-    cell_height = base_h
+    cell_w, cell_h = base_w, base_h
 
-    # --- Compute total grid dimensions ---
-    total_width = padding * (num_cols + 1) + cell_width * num_cols
-    total_height = padding * (num_rows + 1)
-
-    for row in layout:
-        row_max_height = 0
+    # --- Step 1: Track occupied cells ---
+    grid_occupancy = [[None for _ in range(num_cols)] for _ in range(num_rows)]
+    for r, row in enumerate(layout):
+        c = 0
         for cell in row:
-            img_idx = cell["img"]
-            img = images[img_idx]
-            colspan = cell.get("colspan", 1)
+            while c < num_cols and grid_occupancy[r][c] is not None:
+                c += 1
+            if c >= num_cols:
+                raise ValueError(f"Layout overflow in row {r}")
             rowspan = cell.get("rowspan", 1)
-            target_width = cell_width * colspan + padding * (colspan - 1)
-            aspect = img.shape[1] / img.shape[0]
-            target_height = target_width / aspect
-            row_max_height = max(row_max_height, target_height * rowspan)
-        total_height += int(row_max_height) + label_height + padding
+            colspan = cell.get("colspan", 1)
+            for rr in range(r, r + rowspan):
+                for cc in range(c, c + colspan):
+                    grid_occupancy[rr][cc] = cell
+            c += colspan
 
-    # --- Initialize black background ---
-    grid_img = np.zeros((int(total_height), int(total_width), 3), dtype=np.uint8)
+    # --- Step 2: Compute pixel offsets including label heights ---
+    row_y = [0] * num_rows
+    y_offset = padding
+    for r in range(num_rows):
+        row_y[r] = y_offset
+        # each row has image height + label area + padding
+        y_offset += cell_h + label_height + padding
 
+    col_x = [padding + c * (cell_w + padding) for c in range(num_cols)]
+
+    total_w = padding * (num_cols + 1) + num_cols * cell_w
+    total_h = y_offset  # already includes bottom padding
+
+    grid_img = np.zeros((int(total_h), int(total_w), 3), dtype=np.uint8)
+
+    # --- Font setup ---
     font = cv2.FONT_HERSHEY_SIMPLEX
     font_scale = label_fontsize / 30
-    font_thickness = label_fontthickness  # bold
+    font_thickness = label_fontthickness
 
-    # --- Draw images row-by-row ---
-    y_offset = padding
-    for row in layout:
-        x_offset = padding
-        row_max_height = 0
-        for cell in row:
+    drawn = set()
+    for r in range(num_rows):
+        for c in range(num_cols):
+            cell = grid_occupancy[r][c]
+            if cell is None or id(cell) in drawn:
+                continue
+            drawn.add(id(cell))
+
             img_idx = cell["img"]
             img = images[img_idx]
+            label = labels[img_idx] if img_idx < len(labels) else ""
+
             colspan = cell.get("colspan", 1)
             rowspan = cell.get("rowspan", 1)
 
-            target_width = cell_width * colspan + padding * (colspan - 1)
-            aspect = img.shape[1] / img.shape[0]
-            target_height = target_width / aspect
+            # --- Compute total area occupied, including label sections ---
+            w_px = cell_w * colspan + padding * (colspan - 1)
+            h_px = (cell_h + label_height) * rowspan + padding * (rowspan - 1)
 
-            # Reserve a space for the text area above the image
-            img_y_start = y_offset + label_height
-            img_y_end = img_y_start + int(target_height)
+            x = col_x[c]
+            y = row_y[r]
 
-            # Resize image
-            resized = cv2.resize(
-                img,
-                (int(target_width), int(target_height)),
-                interpolation=cv2.INTER_AREA,
-            )
+            # The top label area belongs only to the first row inside the rowspan block
+            img_y_start = int(y + label_height)
+            img_h = h_px - label_height  # exclude label height only once at the top
 
-            # Paste image below label area
+            # Resize to fill entire assigned region
+            resized = cv2.resize(img, (int(w_px), int(img_h)), interpolation=cv2.INTER_AREA)
+
+            # Paste it in
             grid_img[
-                int(img_y_start) : int(img_y_end),
-                int(x_offset) : int(x_offset + target_width),
+                img_y_start : int(img_y_start + img_h),
+                int(x) : int(x + w_px)
             ] = resized
 
-            # --- Draw label above image ---
-            label = labels[img_idx] if img_idx < len(labels) else ""
+            # --- Label above the image (top row only) ---
             if label:
                 text_size, _ = cv2.getTextSize(label, font, font_scale, font_thickness)
-                text_x = int(x_offset + (target_width - text_size[0]) / 2)
-                text_y = int(
-                    y_offset + label_height * 0.8
-                )  # keep nicely within text area height
-
-                # (Optional) A shadow for better visibility
+                text_x = int(x + (w_px - text_size[0]) / 2)
+                text_y = int(y + label_height * 0.8)
                 cv2.putText(
                     grid_img,
                     label,
@@ -122,8 +127,6 @@ def gen_image_grid(
                     font_thickness + 2,
                     cv2.LINE_AA,
                 )
-
-                # White bold text
                 cv2.putText(
                     grid_img,
                     label,
@@ -134,11 +137,6 @@ def gen_image_grid(
                     font_thickness,
                     cv2.LINE_AA,
                 )
-
-            x_offset += target_width + padding
-            row_max_height = max(row_max_height, target_height * rowspan)
-
-        y_offset += row_max_height + label_height + padding
 
     return grid_img
 
@@ -152,6 +150,7 @@ def gen_image_grid_helper(
     label_fontthickness: int,
     padding: int,
     layout: List[List[Dict[str, Any]]],
+    scale: float = 1.0,
 ):
     images = []
     for image_file in image_files:
@@ -169,6 +168,13 @@ def gen_image_grid_helper(
         layout,
     )
 
+    if scale != 1.0:
+        new_w = int(image_grid.shape[1] * scale)
+        new_h = int(image_grid.shape[0] * scale)
+        image_grid = cv2.resize(
+            image_grid, (new_w, new_h), interpolation=cv2.INTER_AREA
+        )
+
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     cv2.imwrite(output_path, cv2.cvtColor(image_grid, cv2.COLOR_RGB2BGR))
 
@@ -182,6 +188,7 @@ def gen_grid(config: Dict):
     label_height: int = config.get("label_height", 80)
     padding: int = config.get("padding", 10)
     label_fontthickness: int = config.get("label_fontthickness", 5)
+    scale: float = config.get("scale", 1.0)
 
     os.makedirs(output_dir, exist_ok=True)
 
@@ -233,6 +240,7 @@ def gen_grid(config: Dict):
                     label_fontthickness,
                     padding,
                     layout,
+                    scale,
                 ),
                 callback=update,
             )
