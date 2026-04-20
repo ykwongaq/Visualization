@@ -4,6 +4,19 @@ import subprocess
 
 
 def get_fps(video_path: str) -> float:
+    """
+    Extract FPS from video file using ffprobe.
+
+    Args:
+        video_path: Path to the video file
+
+    Returns:
+        float: Frame rate (FPS) of the video
+
+    Raises:
+        RuntimeError: If ffprobe command fails
+        ValueError: If no valid frame rate is found
+    """
     command = [
         "ffprobe",
         "-v",
@@ -16,18 +29,68 @@ def get_fps(video_path: str) -> float:
         "default=noprint_wrappers=1:nokey=1",
         video_path,
     ]
+
     result = subprocess.run(
         command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
     )
+
+    # Check if ffprobe command succeeded
+    if result.returncode != 0:
+        error_msg = result.stderr.strip() if result.stderr else "Unknown error"
+        raise RuntimeError(f"ffprobe failed for video '{video_path}': {error_msg}")
+
     fps_str = result.stdout.strip()
 
-    if "/" in fps_str:
-        num, denom = map(float, fps_str.split("/"))
-        fps = num / denom
-    else:
-        fps = float(fps_str)
+    # Check if output is empty (no video stream found)
+    if not fps_str:
+        raise ValueError(
+            f"No video stream or frame rate data found for '{video_path}'. "
+            f"The file might be corrupted, audio-only, or not a valid video file."
+        )
 
-    return fps
+    # Parse the frame rate
+    try:
+        if "/" in fps_str:
+            num, denom = map(float, fps_str.split("/"))
+
+            # Check for division by zero or invalid values
+            if denom == 0:
+                raise ValueError(
+                    f"Invalid frame rate '{fps_str}' (division by zero) "
+                    f"for video '{video_path}'"
+                )
+
+            if num == 0:
+                raise ValueError(
+                    f"Invalid frame rate '{fps_str}' (zero numerator) "
+                    f"for video '{video_path}'"
+                )
+
+            fps = num / denom
+        else:
+            fps = float(fps_str)
+
+        # Validate final FPS value
+        if fps <= 0:
+            raise ValueError(f"Invalid FPS value {fps} for video '{video_path}'")
+
+        # Optional: check for unrealistic FPS values
+        if fps > 1000:
+            raise ValueError(
+                f"Unrealistic FPS value {fps} for video '{video_path}'. "
+                f"Raw value: {fps_str}"
+            )
+
+        return fps
+
+    except ValueError as e:
+        # Re-raise our own ValueError with context
+        if "Invalid" in str(e) or "Unrealistic" in str(e):
+            raise
+        # Handle parsing errors
+        raise ValueError(
+            f"Failed to parse frame rate '{fps_str}' for video '{video_path}': {e}"
+        )
 
 
 def get_codec(video_path: str) -> str:
@@ -77,7 +140,7 @@ def video_to_frame(
     output_dir: str,
     output_pattern: str = "%08d.jpg",
     fps: int = None,
-    max_size: int = 1024,
+    max_size: int = 1920,
     codec: str = None,
 ) -> None:
     """
