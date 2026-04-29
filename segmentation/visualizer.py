@@ -43,7 +43,7 @@ class Visualizer:
     """
 
     # Default boundary width is the ratio of the image shortest side
-    DEFAULT_BOUNDARY_RATIO = 0.007
+    DEFAULT_BOUNDARY_RATIO = 0.01
 
     DEFAULT_MASK_ALPHA = 0.4
     DEFAULT_BUNDARY_ALPHA = 0.7
