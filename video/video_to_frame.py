@@ -201,6 +201,8 @@ def video_to_frame(
         vf_filter,
         "-start_number",
         "0",
+        "-q:v",
+        "2",
         frame_pattern,
     ]
 
