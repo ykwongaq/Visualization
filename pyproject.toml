@@ -8,10 +8,10 @@ version = "0.1.0"
 description = "Utilities for visualizing bounding boxes, segmentation masks, depth maps, points, and image grids, plus video/frame conversion tools."
 requires-python = ">=3.10"
 dependencies = [
-    "numpy",
+    "numpy>=2.0",
     "opencv-python",
     "Pillow",
-    "matplotlib",
+    "matplotlib>=3.9",
     "tqdm",
 ]
 
