@@ -10,7 +10,7 @@ Grid generation is parallelized across CPU cores via :mod:`multiprocessing`.
 
 Typical usage — from Python::
 
-    from image_grids.gen_grid import gen_grid, GridConfig
+    from yk_visualization.image_grids.gen_grid import gen_grid, GridConfig
 
     config = GridConfig(padding=20, scale=0.5)
     layout = [[{"img": 0}], [{"img": 1}]]
@@ -25,7 +25,7 @@ Typical usage — from Python::
 
 Typical usage — from a JSON config file::
 
-    from image_grids.gen_grid import load_config, gen_grid_from_config
+    from yk_visualization.image_grids.gen_grid import load_config, gen_grid_from_config
 
     gen_grid_from_config("config.json")
 
@@ -304,7 +304,7 @@ def gen_single_grid(
 
     Example::
 
-        from image_grids.gen_grid import gen_single_grid, GridConfig
+        from yk_visualization.image_grids.gen_grid import gen_single_grid, GridConfig
 
         gen_single_grid(
             image_paths=["a.jpg", "b.jpg", "c.jpg"],
@@ -489,7 +489,7 @@ def gen_grid_from_config(config_file: str) -> None:
 
     Example::
 
-        from image_grids.gen_grid import gen_grid_from_config
+        from yk_visualization.image_grids.gen_grid import gen_grid_from_config
 
         gen_grid_from_config("config.json")
     """

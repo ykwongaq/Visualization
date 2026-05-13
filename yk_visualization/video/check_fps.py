@@ -7,7 +7,7 @@ Typical usage::
 
 import argparse
 
-from video.video_to_frame import get_fps
+from yk_visualization.video.video_to_frame import get_fps
 
 
 def main(args):
