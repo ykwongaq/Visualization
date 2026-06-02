@@ -14,7 +14,6 @@ Typical usage::
 import argparse
 import os
 import subprocess
-
 from typing import Optional
 
 
@@ -43,10 +42,14 @@ def get_fps(video_path: str) -> float:
     """
     command = [
         "ffprobe",
-        "-v", "error",
-        "-select_streams", "v:0",
-        "-show_entries", "stream=r_frame_rate",
-        "-of", "default=noprint_wrappers=1:nokey=1",
+        "-v",
+        "error",
+        "-select_streams",
+        "v:0",
+        "-show_entries",
+        "stream=r_frame_rate",
+        "-of",
+        "default=noprint_wrappers=1:nokey=1",
         video_path,
     ]
 
@@ -119,10 +122,14 @@ def get_codec(video_path: str) -> str:
     """
     cmd = [
         "ffprobe",
-        "-v", "error",
-        "-select_streams", "v:0",
-        "-show_entries", "stream=codec_name",
-        "-of", "default=noprint_wrappers=1:nokey=1",
+        "-v",
+        "error",
+        "-select_streams",
+        "v:0",
+        "-show_entries",
+        "stream=codec_name",
+        "-of",
+        "default=noprint_wrappers=1:nokey=1",
         video_path,
     ]
     result = subprocess.run(
@@ -147,10 +154,14 @@ def get_resolution(video_path: str) -> tuple[int, int]:
     """
     command = [
         "ffprobe",
-        "-v", "error",
-        "-select_streams", "v:0",
-        "-show_entries", "stream=width,height",
-        "-of", "csv=s=x:p=0",
+        "-v",
+        "error",
+        "-select_streams",
+        "v:0",
+        "-show_entries",
+        "stream=width,height",
+        "-of",
+        "csv=s=x:p=0",
         video_path,
     ]
     result = subprocess.run(
@@ -160,7 +171,7 @@ def get_resolution(video_path: str) -> tuple[int, int]:
     return w, h
 
 
-def video_to_frame(
+def video_to_frames(
     input_video: str,
     output_dir: str,
     output_pattern: str = "%08d.jpg",
@@ -227,9 +238,12 @@ def video_to_frame(
     codec_safety_flags = []
     if codec in ("h264", "hevc"):
         codec_safety_flags = [
-            "-err_detect", "ignore_err",
-            "-fflags", "+genpts",
-            "-threads", "1",
+            "-err_detect",
+            "ignore_err",
+            "-fflags",
+            "+genpts",
+            "-threads",
+            "1",
         ]
     elif codec in ("mjpeg", "prores", "vp9", "av1"):
         codec_safety_flags = ["-fflags", "+genpts"]
@@ -237,12 +251,17 @@ def video_to_frame(
     cmd = [
         "ffmpeg",
         "-hide_banner",
-        "-loglevel", "error",
+        "-loglevel",
+        "error",
         *codec_safety_flags,
-        "-i", input_video,
-        "-vf", vf_filter,
-        "-start_number", "0",
-        "-q:v", "2",
+        "-i",
+        input_video,
+        "-vf",
+        vf_filter,
+        "-start_number",
+        "0",
+        "-q:v",
+        "2",
         frame_pattern,
     ]
 
@@ -250,7 +269,7 @@ def video_to_frame(
 
 
 def main(args):
-    video_to_frame(
+    video_to_frames(
         args.input_video,
         args.output_dir,
         args.output_pattern,
@@ -265,27 +284,39 @@ if __name__ == "__main__":
         description="Extract frames from a video file using ffmpeg."
     )
     parser.add_argument(
-        "--input_video", type=str, required=True,
+        "--input_video",
+        type=str,
+        required=True,
         help="Path to the input video file.",
     )
     parser.add_argument(
-        "--output_dir", type=str, required=True,
+        "--output_dir",
+        type=str,
+        required=True,
         help="Directory to write extracted frames.",
     )
     parser.add_argument(
-        "--output_pattern", type=str, default="%08d.jpg",
+        "--output_pattern",
+        type=str,
+        default="%08d.jpg",
         help="Output filename pattern (default: %%(08d).jpg).",
     )
     parser.add_argument(
-        "--fps", type=float, default=None,
+        "--fps",
+        type=float,
+        default=None,
         help="Extraction frame rate (default: native video FPS).",
     )
     parser.add_argument(
-        "--max_size", type=int, default=1920,
+        "--max_size",
+        type=int,
+        default=1920,
         help="Maximum pixels on the longer side (default: 1920).",
     )
     parser.add_argument(
-        "--codec", type=str, default=None,
+        "--codec",
+        type=str,
+        default=None,
         help="Input codec override (default: auto-detected).",
     )
     main(parser.parse_args())

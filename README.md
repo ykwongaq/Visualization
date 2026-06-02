@@ -104,10 +104,10 @@ gen_grid_from_config("config.json")
 Extract frames from a video or assemble frames back into a video using ffmpeg.
 
 ```python
-from yk_visualization.video import video_to_frame, frame_to_video, get_fps
+from yk_visualization.video import video_to_frames, frames_to_video, get_fps
 
-video_to_frame("input.mp4", "frames/", fps=24)
-frame_to_video("frames/", "output.mp4", fps=24)
+video_to_frames("input.mp4", "frames/", fps=24)
+frames_to_video("frames/", "output.mp4", fps=24)
 
 fps = get_fps("input.mp4")
 ```

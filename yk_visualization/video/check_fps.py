@@ -7,7 +7,7 @@ Typical usage::
 
 import argparse
 
-from yk_visualization.video.video_to_frame import get_fps
+from yk_visualization.video.video_to_frames import get_fps
 
 
 def main(args):
@@ -20,6 +20,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Print the frame rate of a video file."
     )
-    parser.add_argument("--video_path", type=str, required=True,
-                        help="Path to the video file.")
+    parser.add_argument(
+        "--video_path", type=str, required=True, help="Path to the video file."
+    )
     main(parser.parse_args())
