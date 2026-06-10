@@ -23,12 +23,11 @@ Typical usage::
 
 from __future__ import annotations
 
-import cv2
-import numpy as np
-
 from dataclasses import dataclass
 from typing import List, Optional, Tuple
 
+import cv2
+import numpy as np
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -47,19 +46,20 @@ class GridConfig:
             *outer_padding* is ``True``, between cells and the outer
             border).  A single value applies to both axes.  Defaults to
             ``20``.
-        outer_padding: When ``True`` (the default), *padding* is also
-            applied to the outer border of the grid.  Set to ``False`` to
-            keep the image content flush with the grid edges, with padding
-            only between cells.
+        outer_padding: When ``True``, *padding* is also applied to the
+            outer border of the grid.  When ``False`` (the default),
+            the image content sits flush with the grid edges and padding
+            only appears between cells.
         max_resolution: Maximum width **or** height (in pixels) of the
             output grid.  The grid is sized so neither dimension exceeds
             this value while the cell dimensions remain uniform.  Defaults
             to ``1920``.
-        tight: When ``True``, cell dimensions are derived from the actual
-            image sizes rather than expanding to fill ``max_resolution``.
-            This minimizes wasted letterboxing / pillarboxing space.
-            ``max_resolution`` still acts as an upper bound.  Defaults to
-            ``False``.
+        tight: When ``True`` (the default), cell dimensions are derived
+            from the actual image sizes rather than expanding to fill
+            ``max_resolution``.  This minimizes wasted letterboxing /
+            pillarboxing space.  ``max_resolution`` still acts as an
+            upper bound.  Set to ``False`` to expand cells to fill the
+            available resolution budget.
         background_color: ``(R, G, B)`` tuple for the background / padding
             area.  Defaults to white ``(255, 255, 255)``.
         label_font_scale: OpenCV ``FONT_HERSHEY_SIMPLEX`` scale factor for
@@ -80,8 +80,8 @@ class GridConfig:
 
     padding: int = 20
     max_resolution: int = 1920
-    tight: bool = False
-    outer_padding: bool = True
+    tight: bool = True
+    outer_padding: bool = False
     background_color: Tuple[int, int, int] = (255, 255, 255)
     label_font_scale: float = 0.7
     label_color: Tuple[int, int, int] = (255, 255, 255)
@@ -169,9 +169,7 @@ class GridGenerator:
             gen = GridGenerator(config)
         """
         if config is not None and kwargs:
-            raise ValueError(
-                "Provide either config or keyword arguments, not both."
-            )
+            raise ValueError("Provide either config or keyword arguments, not both.")
         self.config = config if config is not None else GridConfig(**kwargs)
 
         self._images: List[np.ndarray] = []
@@ -328,9 +326,7 @@ class GridGenerator:
         rows = (n + cols - 1) // cols
         return rows, cols
 
-    def _compute_cell_size(
-        self, rows: int, cols: int
-    ) -> Tuple[int, int]:
+    def _compute_cell_size(self, rows: int, cols: int) -> Tuple[int, int]:
         """Return the ``(width, height)`` of every cell in pixels.
 
         The cell dimensions are chosen so that the whole grid (including
@@ -360,9 +356,7 @@ class GridGenerator:
         cell_h = max(1, avail_h // rows)
         return cell_w, cell_h
 
-    def _compute_tight_cell_size(
-        self, rows: int, cols: int
-    ) -> Tuple[int, int]:
+    def _compute_tight_cell_size(self, rows: int, cols: int) -> Tuple[int, int]:
         """Derive cell size from the actual images, capped at *max_resolution*.
 
         The "natural" cell is sized to hold the largest image (by width and
@@ -396,8 +390,9 @@ class GridGenerator:
             needed_cell_h = max_dim - max(pad_rows, 0) * pad
             if needed_cell_w < 1 or needed_cell_h < 1:
                 return 1, 1
-            scale = min(needed_cell_w / (cols * cell_w),
-                        needed_cell_h / (rows * cell_h))
+            scale = min(
+                needed_cell_w / (cols * cell_w), needed_cell_h / (rows * cell_h)
+            )
             cell_w = max(1, int(cell_w * scale))
             cell_h = max(1, int(cell_h * scale))
 
@@ -491,8 +486,13 @@ class GridGenerator:
         tx = max(0, (cell.shape[1] - tw) // 2)
         ty = th + 4  # baseline offset from top of strip
         cv2.putText(
-            cell, text, (tx, ty),
-            font, scale, bgr, thickness,
+            cell,
+            text,
+            (tx, ty),
+            font,
+            scale,
+            bgr,
+            thickness,
             cv2.LINE_AA,
         )
 

@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.1] — 2026-06-10
+
+### Changed
+
+- **`GridConfig`**: flipped default values — `tight` now defaults to
+  ``True`` (cell sizes derived from actual image dimensions) and
+  `outer_padding` now defaults to ``False`` (padding only between cells,
+  not at the outer border).  These defaults produce tighter, more
+  predictable grids for the common case.
+
+### Fixed
+
+- Reordered imports to follow the standard-library-first convention.
+- Normalised line lengths for better readability.
+
 ## [0.2.0] — 2026-06-10
 
 ### Added
