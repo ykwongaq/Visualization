@@ -105,6 +105,8 @@ def frames_to_video(
         str(fps),
         "-start_number",
         str(start_number),
+        "-vf",
+        "pad=ceil(iw/2)*2:ceil(ih/2)*2",
         "-i",
         target_frame_pattern,
         "-pix_fmt",

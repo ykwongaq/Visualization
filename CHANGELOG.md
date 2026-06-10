@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.2] — 2026-06-10
+
+### Fixed
+
+- **`frames_to_video`**: added `pad=ceil(iw/2)*2:ceil(ih/2)*2` video filter so
+  frames with odd width or height are padded to even dimensions before encoding,
+  preventing ffmpeg failures when using `yuv420p` pixel format.
+
 ## [0.2.1] — 2026-06-10
 
 ### Changed
