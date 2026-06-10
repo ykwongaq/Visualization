@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.0] — 2026-06-10
+
+### Added
+
+- **`GridGenerator`**: new `tight` parameter — cell dimensions are derived
+  from actual image sizes rather than expanding to fill `max_resolution`,
+  minimising letterboxing / pillarboxing waste.
+- **`GridGenerator`**: new `outer_padding` parameter — when `False`,
+  padding only appears between cells, not at the outer border of the grid.
+
+### Changed
+
+- **`image_grids`**: replaced `gen_grid.py` with `grid_generator.py`, a
+  more flexible and better-documented grid compositing module.
+- **`GridConfig`**: removed unused `config.json`; configuration is now
+  entirely through the `GridConfig` dataclass.
+
+### Removed
+
+- **`image_grids`**: deleted `gen_grid.py` and `config.json`.
+
 ## [0.1.1] — 2026-06-02
 
 ### Changed

@@ -1,17 +1,9 @@
-from yk_visualization.image_grids.gen_grid import (
+from yk_visualization.image_grids.grid_generator import (
     GridConfig,
-    gen_grid,
-    gen_grid_from_config,
-    gen_image_grid,
-    gen_single_grid,
-    load_config,
+    GridGenerator,
 )
 
 __all__ = [
     "GridConfig",
-    "gen_grid",
-    "gen_grid_from_config",
-    "gen_image_grid",
-    "gen_single_grid",
-    "load_config",
+    "GridGenerator",
 ]
