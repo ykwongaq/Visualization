@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.3] — 2026-06-10
+
+### Fixed
+
+- **`frames_to_video`**: moved the `-vf` (video filter) argument to appear
+  after the `-i` input specifier, matching ffmpeg’s output-option ordering.
+  Previously the filter was incorrectly placed before the input, causing ffmpeg
+  to ignore it or error out.
+
 ## [0.2.2] — 2026-06-10
 
 ### Fixed
